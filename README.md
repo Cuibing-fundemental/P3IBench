@@ -14,8 +14,8 @@
     <img src="?" width="20" align="center" alt="Homepage"> <strong>Homepage</strong>
   </a>
   &nbsp;&nbsp;&nbsp;
-  <a href="?">
-    <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg" width="24" align="center" alt="Hugging Face"> <strong>Models &amp; Data</strong>
+  <a href="https://huggingface.co/datasets/AstroCuibing/P3IBench">
+    <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg" width="24" align="center" alt="Hugging Face"> <strong>Datasets</strong>
   </a>
 </p>
 
@@ -38,38 +38,17 @@ mkdir -p train data output
 
 ### Download the Benchmark
 
-**Dataset URL: coming soon.** Once the dataset is published, replace `<DATA_ARCHIVE_URL>` with the official download URL and extract it into `data/`:
+Run the following command to download our dataset from huggingface.
 
 ```bash
-curl -L "<DATA_ARCHIVE_URL>" -o data/benchmark.tar.gz
-tar -xzf data/benchmark.tar.gz -C data
+hf download AstroCuibing/P3IBench --repo-type=dataset --local-dir=data
 ```
-
-The archive should place dataset directories directly under `data/` (move them up one level if the archive contains an extra enclosing directory):
-
-```text
-data/
-├── Prediction_Accident/
-│   ├── Prediction_Accident.json
-│   └── videos/
-├── Perception_Object/                 # Perception_Object.json and videos/
-├── Prediction_Crime/                  # Prediction_Crime.json and videos/
-├── Perception_Event_atomic/           # Perception_Event_atomic.json and videos/
-├── Perception_Event_compositional/    # Perception_Event_compositional.json and videos/
-├── Perception_Event_eventtype/        # Perception_Event_eventtype.json and videos/
-└── Intervention/                      # Intervention.json and video/
-```
-
-Each annotation JSON must contain a nonempty top-level `videos` array. Entries require `question_id`, `video`, and `duration`; evaluation also uses the reference `response` fields. Video paths in annotations are relative to their dataset's `videos/` or `video/` directory. The diagram describes the expected layout, **not** a replacement for the official annotations. For data stored elsewhere, pass `--data-root /path/to/data` to `main.py`.
-
-Dataset directories and primary annotation filenames use the names above. Original `question_id` prefixes are preserved for task routing and prediction matching; do not rename sample IDs or video files.
 
 ### Start a vLLM Backend
 
 In the first terminal, start an OpenAI-compatible vLLM service. Replace the model ID or path with the model you want to evaluate:
 
 ```bash
-conda activate P3IBench
 vllm serve Qwen/Qwen3-VL-4B-Instruct \
   --served-model-name Qwen3-VL-4B-Instruct \
   --host 127.0.0.1 --port 8010
@@ -87,7 +66,7 @@ python main.py --port 8010
 python main.py --port 8010 --datasets Prediction_Accident Perception_Event_atomic
 ```
 
-By default, `main.py` runs Prediction_Accident, Perception_Object, Prediction_Crime, Perception_Event_atomic, Perception_Event_compositional, Perception_Event_eventtype, and Intervention in sequence. It discovers the served model via `/v1/models`; alternatively, provide `--model MODEL_NAME` or `--api-base http://HOST:PORT/v1` for a remote backend. Other options include `--fps`, `--parallelism`, `--max-frames`, and `--request-retries` (see `python main.py --help`). Each dataset receives default, first-only, bidirectional default, and bidirectional first-only scores. If a dataset fails, the script records the error, continues with the remaining datasets, and exits with a nonzero status at the end.
+By default, `main.py` runs Prediction_Accident, Perception_Object, Prediction_Crime, Perception_Event_atomic, Perception_Event_compositional, Perception_Event_eventtype, and Intervention in sequence. It discovers the served model via `/v1/models`; alternatively, provide `--model MODEL_NAME` or `--api-base http://HOST:PORT/v1` for a remote backend. Other options include `--fps`, `--parallelism`, `--max-frames`, and `--request-retries` (see `python main.py --help`).
 
 ## Semantic Evaluation
 
@@ -137,7 +116,6 @@ Consult the dataset directories inside `output/<RUN_ID>/` for actual results; `D
 main.py             # Inference, standard evaluation, and aggregation
 infer/              # Streaming inference and supporting modules
 eval/               # Standard, compositional, and semantic evaluators
-train/              # Training code
 data/               # Downloaded dataset
 output/             # Generated predictions and scores
 requirements.txt

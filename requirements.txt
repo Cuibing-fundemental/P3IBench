@@ -3,5 +3,6 @@ decord==0.6.0
 openai==2.40.0
 pillow==12.2.0
 tqdm==4.67.3
+hf==2.2.0
 
 # vllm==0.24.0
